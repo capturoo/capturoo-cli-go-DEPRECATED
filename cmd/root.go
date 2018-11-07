@@ -3,10 +3,17 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"time"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+)
+
+var (
+	// Endpoint is a URL endpoint for the API
+	Endpoint = "https://api.capturoo.com"
+	Timeout  = time.Duration(10 * time.Second)
 )
 
 var rootCmd = &cobra.Command{
@@ -16,6 +23,11 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
+	ep := os.Getenv("CAPTUROO_ENDPOINT")
+	if ep != "" {
+		Endpoint = ep
+	}
+
 	cobra.OnInitialize(initConfig)
 	//rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.capturoo.yaml)")
 }
