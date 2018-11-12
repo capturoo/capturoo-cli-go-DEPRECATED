@@ -23,6 +23,40 @@ type Project struct {
 	LastModified string `json:"lastModified"`
 }
 
+// GetProjects makes a HTTP GET request to the capturoo API to get a slice of Projects.
+func GetProjects() ([]Project, error) {
+	tr := &http.Transport{
+		MaxIdleConnsPerHost: 10,
+	}
+
+	client := &http.Client{
+		Transport: tr,
+		Timeout:   Timeout,
+	}
+
+	uri := fmt.Sprintf("%s/projects", Endpoint)
+	req, err := http.NewRequest("GET", uri, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating new GET request: %v", err)
+	}
+
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("X-API-Key", "EbEweSE59l6u2SiLdgNdvYHj38oB1F1B0xYE149YTA2")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error executing HTTP GET to %v : %v", uri, err)
+	}
+	defer resp.Body.Close()
+
+	var plist []Project
+	if err := json.NewDecoder(resp.Body).Decode(&plist); err != nil {
+		return nil, fmt.Errorf("error decoding url %s: %v", uri, err)
+	}
+
+	return plist, nil
+}
+
 // projectsListCmd represents the list command
 var projectsListCmd = &cobra.Command{
 	Use:   "list",
@@ -32,37 +66,9 @@ var projectsListCmd = &cobra.Command{
 		s.Color("green")
 		s.Start()
 
-		tr := &http.Transport{
-			MaxIdleConnsPerHost: 10,
-		}
-
-		client := &http.Client{
-			Transport: tr,
-			Timeout:   Timeout,
-		}
-
-		uri := fmt.Sprintf("%s/projects", Endpoint)
-		req, err := http.NewRequest("GET", uri, nil)
+		plist, err := GetProjects()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "\rerror creating new GET request: %v", err)
-			s.Stop()
-			os.Exit(1)
-		}
-
-		req.Header.Set("Accept", "application/json")
-		req.Header.Set("X-API-Key", "EbEweSE59l6u2SiLdgNdvYHj38oB1F1B0xYE149YTA2")
-
-		resp, err := client.Do(req)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "\rerror executing HTTP GET to %v : %v", uri, err)
-			s.Stop()
-			os.Exit(1)
-		}
-		defer resp.Body.Close()
-
-		var plist []Project
-		if err := json.NewDecoder(resp.Body).Decode(&plist); err != nil {
-			fmt.Fprintf(os.Stderr, "\rerror decoding url %s: %v\n", uri, err)
+			fmt.Fprintf(os.Stderr, "\rerror calling GetProjects: %v", err)
 			s.Stop()
 			os.Exit(1)
 		}
