@@ -8,7 +8,9 @@ import (
 	"strconv"
 	"time"
 
+	"bitbucket.org/andyfusniakteam/capturoo-cli-go/configmgr"
 	"github.com/briandowns/spinner"
+	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
@@ -24,7 +26,7 @@ type Project struct {
 }
 
 // GetProjects makes a HTTP GET request to the capturoo API to get a slice of Projects.
-func GetProjects() ([]Project, error) {
+func GetProjects(privApiKey string) ([]Project, error) {
 	tr := &http.Transport{
 		MaxIdleConnsPerHost: 10,
 	}
@@ -41,7 +43,7 @@ func GetProjects() ([]Project, error) {
 	}
 
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("X-API-Key", "EbEweSE59l6u2SiLdgNdvYHj38oB1F1B0xYE149YTA2")
+	req.Header.Set("X-API-Key", privApiKey)
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -66,7 +68,17 @@ var projectsListCmd = &cobra.Command{
 		s.Color("green")
 		s.Start()
 
-		plist, err := GetProjects()
+		pid, err := configmgr.ReadCurrentProject()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to read current project from $HOME/.capturoo/CURRENT_PROJECT: %v", err)
+			os.Exit(1)
+		}
+		if pid == nil {
+			fmt.Fprintf(os.Stderr, "failed to read current project from $HOME/.capturoo/CURRENT_PROJECT")
+			os.Exit(1)
+		}
+
+		plist, err := GetProjects(caprc.PrivApiKey)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "\rerror calling GetProjects: %v", err)
 			s.Stop()
@@ -75,11 +87,20 @@ var projectsListCmd = &cobra.Command{
 
 		s.Stop()
 
+		c := color.New(color.FgCyan)
+		c.Add(color.Bold)
+
 		table := tablewriter.NewWriter(os.Stdout)
 		table.SetBorder(false)
 		table.SetHeader([]string{"Project ID", "Project Name", "Num Leads", "Public API Key"})
 		for _, v := range plist {
-			table.Append([]string{v.PID, v.ProjectName, strconv.Itoa(v.LeadsCount), v.PublicAPIKey})
+			func(tpid string) {
+				if tpid == *pid {
+					table.Append([]string{c.Sprintf("%s", v.PID), v.ProjectName, strconv.Itoa(v.LeadsCount), v.PublicAPIKey})
+				} else {
+					table.Append([]string{v.PID, v.ProjectName, strconv.Itoa(v.LeadsCount), v.PublicAPIKey})
+				}
+			}(v.PID)
 		}
 		table.Render()
 	},

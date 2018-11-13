@@ -5,9 +5,8 @@ import (
 	"os"
 	"time"
 
-	homedir "github.com/mitchellh/go-homedir"
+	"bitbucket.org/andyfusniakteam/capturoo-cli-go/configmgr"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var (
@@ -15,6 +14,8 @@ var (
 	Endpoint = "https://api.capturoo.com"
 	Timeout  = time.Duration(10 * time.Second)
 )
+
+var caprc *configmgr.CapturooConfig
 
 var rootCmd = &cobra.Command{
 	Use:   "capturoo",
@@ -33,19 +34,7 @@ func init() {
 }
 
 func initConfig() {
-	home, err := homedir.Dir()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	// Search config in home directory with name ".capturoo" (without extension).
-	viper.AddConfigPath(home)
-	viper.SetConfigName(".capturoo")
-
-	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println("Can't read config:", err)
-		os.Exit(1)
-	}
+	caprc, _ = configmgr.ReadConfig()
 }
 
 func Execute() {

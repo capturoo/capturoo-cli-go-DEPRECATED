@@ -20,7 +20,7 @@ var selectCmd = &cobra.Command{
 		s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
 		s.Color("green")
 		s.Start()
-		plist, err := GetProjects()
+		plist, err := GetProjects(caprc.PrivApiKey)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "\rerror calling GetProjects: %v", err)
 			s.Stop()

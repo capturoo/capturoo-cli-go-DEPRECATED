@@ -48,7 +48,7 @@ var infoCmd = &cobra.Command{
 		}
 
 		req.Header.Set("Accept", "application/json")
-		req.Header.Set("X-API-Key", "EbEweSE59l6u2SiLdgNdvYHj38oB1F1B0xYE149YTA2")
+		req.Header.Set("X-API-Key", caprc.PrivApiKey)
 		resp, err := client.Do(req)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "\rerror executing HTTP GET to %v : %v", uri, err)
