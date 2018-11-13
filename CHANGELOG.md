@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 0.5.0 (13 Nov 2018)
++ CLI tool version subcommand support -ldflags "-X main.version=x.y.z" compile-time configuration
+
 ## 0.4.0 (13 Nov 2018)
 + Reads the ~/.capturoorc config every run
 + project select and project list uses and ~/.capturoo/CURRENT_PROJECT to track
